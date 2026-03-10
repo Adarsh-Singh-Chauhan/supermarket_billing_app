@@ -174,4 +174,128 @@
       max-width: 1280px; /* Standard content width */
     }
   }
+
+  /* POS-specific components - using Tailwind utilities directly */
+
+  .invoice-container {
+    @apply bg-card text-card-foreground p-6 rounded-lg border border-border shadow-sm;
+  }
+
+  .invoice-table {
+    @apply w-full border-collapse;
+  }
+
+  .invoice-table th {
+    @apply bg-muted text-muted-foreground font-semibold text-sm py-3 px-4 text-left border-b border-border;
+  }
+
+  .invoice-table td {
+    @apply py-3 px-4 border-b border-border;
+  }
+
+  .invoice-table tr:last-child td {
+    @apply border-b-0;
+  }
+
+  /* Dashboard cards use standard Tailwind utilities */
+
+  /* Form utilities */
+  .form-group {
+    @apply mb-4;
+  }
+
+  .form-label {
+    @apply block text-sm font-medium text-foreground mb-2;
+  }
+
+  .form-input {
+    @apply w-full px-3 py-2 border border-input rounded-md bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all;
+  }
+
+  .form-select {
+    @apply w-full px-3 py-2 border border-input rounded-md bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all;
+  }
+
+  .form-textarea {
+    @apply w-full px-3 py-2 border border-input rounded-md bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all resize;
+  }
+
+  /* Badge utilities */
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+  }
+
+  .badge-primary {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-accent/10 text-accent;
+  }
+
+  .badge-success {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-600/10 text-green-600;
+  }
+
+  .badge-warning {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-600/10 text-yellow-600;
+  }
+
+  .badge-danger {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-destructive/10 text-destructive;
+  }
+
+  .table-row-hover {
+    @apply hover:bg-muted/50 transition-colors cursor-pointer;
+  }
+
+  .text-muted {
+    @apply text-muted-foreground;
+  }
+
+  .text-success {
+    @apply text-green-600;
+  }
+
+  .text-warning {
+    @apply text-yellow-600;
+  }
+
+  .text-danger {
+    @apply text-destructive;
+  }
+
+  .text-info {
+    @apply text-accent;
+  }
+
+  .shadow-card {
+    @apply shadow-sm;
+  }
+
+  .shadow-elevated {
+    @apply shadow-lg;
+  }
+
+  .border-subtle {
+    @apply border-border;
+  }
+
+  .bg-subtle {
+    @apply bg-muted/30;
+  }
+
+  .divider {
+    @apply border-t border-border my-4;
+  }
+
+  .section-title {
+    @apply text-2xl font-bold text-foreground mb-6;
+  }
+
+  .subsection-title {
+    @apply text-lg font-semibold text-foreground mb-4;
+  }
+
+  .small-text {
+    @apply text-xs text-muted-foreground;
+  }
+
+  /* Grid utilities */
 }
