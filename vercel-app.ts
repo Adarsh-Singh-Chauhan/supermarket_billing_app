@@ -1,4 +1,5 @@
 import express from "express";
+import path from "node:path";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { appRouter } from "./server/routers";
 import { createContext } from "./server/_core/context";
@@ -31,3 +32,15 @@ app.get("/api/health", (_req, res) => {
 });
 
 export default app;
+
+
+// Vercel's Express runtime sends application requests through this handler.
+// Include the generated Vite output in the function and serve it for both
+// asset requests and client-side routes.
+const clientBuildDirectory = path.resolve(process.cwd(), "public");
+app.use(express.static(clientBuildDirectory, { index: false }));
+app.get("*", (_req, res, next) => {
+  res.sendFile(path.join(clientBuildDirectory, "index.html"), (error) => {
+    if (error) next(error);
+  });
+});
