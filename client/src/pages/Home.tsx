@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { getLoginUrl } from "@/const";
 import DashboardLayout from "@/components/DashboardLayout";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -64,7 +65,7 @@ function StatCard({
   );
 }
 
-function SectionHeading({ title, subtitle, action }: { title: string; subtitle?: string; action?: React.ReactNode }) {
+function SectionHeading({ title, subtitle, action }: { title: string; subtitle?: string; action?: ReactNode }) {
   return (
     <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
       <div>
@@ -77,7 +78,7 @@ function SectionHeading({ title, subtitle, action }: { title: string; subtitle?:
 }
 
 export default function Home() {
-  const { user, loading, isAuthenticated, logout } = useAuth();
+  const { user, loading, isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
   const [period, setPeriod] = useState<Period>("7d");
   const range = useMemo(() => dateRange(period), [period]);
@@ -104,7 +105,7 @@ export default function Home() {
         <p className="text-xs font-semibold uppercase tracking-[.22em] text-primary">Retail operations</p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight">StoreDesk POS</h1>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">A smarter workspace for checkout, inventory, billing and store performance.</p>
-        <Button onClick={() => window.location.href = (awaitLoginUrl())} className="mt-7 h-11 w-full rounded-xl">Sign in to your store</Button>
+        <Button onClick={() => window.location.href = getLoginUrl()} className="mt-7 h-11 w-full rounded-xl">Sign in to your store</Button>
       </Card>
     </div>;
   }
@@ -114,8 +115,6 @@ export default function Home() {
   const inventory = inventoryQuery.data;
   const overview = overviewQuery.data;
   const lowStock = lowStockQuery.data ?? [];
-  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
-  const todaySales = sales.filter((sale: any) => new Date(sale.createdAt) >= todayStart);
   const recentSales = sales.slice(0, 5);
   const loadingStats = productsQuery.isLoading || overviewQuery.isLoading || inventoryQuery.isLoading;
   const refreshAll = () => {
@@ -213,6 +212,3 @@ export default function Home() {
   );
 }
 
-function awaitLoginUrl() {
-  return import.meta.env.VITE_LOGIN_URL || "/api/oauth/login";
-}
