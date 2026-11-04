@@ -15,6 +15,13 @@
       "when": 1773155362678,
       "tag": "0001_military_roxanne_simpson",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1793769000000,
+      "tag": "0002_local_credentials",
+      "breakpoints": true
     }
   ]
 }
