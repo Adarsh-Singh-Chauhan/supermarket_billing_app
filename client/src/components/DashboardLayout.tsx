@@ -1,4 +1,5 @@
-import { useAuth } from "@/_core/hooks/useAuth";\nimport { getLoginUrl, isOAuthConfigured } from "@/const";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { getLoginUrl, isOAuthConfigured } from "@/const";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
