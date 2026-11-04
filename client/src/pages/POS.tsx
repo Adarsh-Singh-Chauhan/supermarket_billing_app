@@ -127,8 +127,6 @@ export default function POS() {
       const saleItems = cart.map((item) => ({
         productId: item.productId,
         quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        gstPercentage: item.gstPercentage,
       }));
 
       const result = await createSaleMutation.mutateAsync({
