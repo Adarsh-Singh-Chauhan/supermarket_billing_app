@@ -1,192 +1,140 @@
-import { useState } from "react";
-import { trpc } from "@/lib/trpc";
+import { useMemo, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
-import { Eye, Download } from "lucide-react";
-import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Eye, Printer, X } from "lucide-react";
+import { trpc } from "@/lib/trpc";
+
+type InvoiceLine = {
+  name?: string;
+  productId: number;
+  quantity: number;
+  unitPrice: number | string;
+  gstPercentage?: number | string;
+  gstAmount?: number | string;
+  totalPrice: number | string;
+};
+
+function parseInvoiceItems(value: unknown): InvoiceLine[] {
+  if (Array.isArray(value)) return value as InvoiceLine[];
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed as InvoiceLine[] : [];
+    } catch { return []; }
+  }
+  return [];
+}
+
+function escapeHtml(value: unknown) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  })[char] || char);
+}
 
 export default function Sales() {
   const [selectedSaleId, setSelectedSaleId] = useState<number | null>(null);
-
   const salesQuery = trpc.sales.list.useQuery();
-  const invoiceQuery = trpc.invoices.getById.useQuery(
-    { id: selectedSaleId || 0 },
-    { enabled: !!selectedSaleId }
+  const invoiceQuery = trpc.invoices.getBySaleId.useQuery(
+    { saleId: selectedSaleId || 0 },
+    { enabled: selectedSaleId !== null },
   );
-
   const sales = salesQuery.data || [];
+  const invoiceItems = useMemo(() => parseInvoiceItems(invoiceQuery.data?.items), [invoiceQuery.data?.items]);
 
-  const handleDownloadInvoice = (invoiceNumber: string) => {
-    toast.success(`Invoice ${invoiceNumber} ready for download`);
-    // In a real app, this would trigger a PDF download
+  const formatDate = (date: Date | string) => new Date(date).toLocaleString("en-IN", {
+    year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
+  });
+  const currency = (value: unknown) => `₹${Number(value || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  const printInvoice = () => {
+    const invoice = invoiceQuery.data;
+    if (!invoice) return;
+    const printWindow = window.open("", "_blank", "width=900,height=720");
+    if (!printWindow) {
+      window.alert("Please allow pop-ups to print the invoice.");
+      return;
+    }
+
+    const rows = invoiceItems.map(item => `
+      <tr>
+        <td>${escapeHtml(item.name || `Product #${item.productId}`)}</td>
+        <td class="num">${Number(item.quantity)}</td>
+        <td class="num">${currency(item.unitPrice)}</td>
+        <td class="num">${Number(item.gstPercentage || 0).toFixed(2)}%</td>
+        <td class="num">${currency(item.totalPrice)}</td>
+      </tr>`).join("");
+
+    printWindow.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Invoice ${escapeHtml(invoice.invoiceNumber)}</title>
+      <style>
+        *{box-sizing:border-box}body{font:14px Arial,sans-serif;color:#1c2922;margin:36px auto;max-width:820px;padding:0 24px}
+        header{display:flex;justify-content:space-between;gap:24px;border-bottom:2px solid #245c40;padding-bottom:20px}
+        h1{font-size:24px;margin:0 0 8px}h2{font-size:16px;margin:28px 0 12px}
+        .muted{color:#66766b;font-size:12px;line-height:1.6}.meta{text-align:right;font-size:12px;line-height:1.8}
+        table{width:100%;border-collapse:collapse;margin-top:16px}th,td{padding:11px 8px;border-bottom:1px solid #dfe7df;text-align:left}th{font-size:11px;text-transform:uppercase;color:#627166;background:#f4f7f3}.num{text-align:right}
+        .totals{margin:22px 0 0 auto;width:min(340px,100%)}.totals div{display:flex;justify-content:space-between;padding:6px 0}.grand{border-top:2px solid #245c40;margin-top:8px;padding-top:12px!important;font-size:18px;font-weight:700}
+        footer{margin-top:42px;border-top:1px solid #dfe7df;padding-top:16px;color:#66766b;font-size:11px}
+        @media print{body{margin:0 auto;padding:0 10px}}
+      </style></head><body>
+      <header><div><h1>${escapeHtml(invoice.storeName || "StoreDesk Retail")}</h1><div class="muted">${escapeHtml(invoice.storeAddress || "")}</div><div class="muted">GSTIN: ${escapeHtml(invoice.gstin || "Not configured")}</div></div>
+      <div class="meta"><b>TAX INVOICE</b><br>Invoice: ${escapeHtml(invoice.invoiceNumber)}<br>Date: ${escapeHtml(formatDate(invoice.invoiceDate))}</div></header>
+      <h2>Items purchased</h2><table><thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Unit price</th><th class="num">GST</th><th class="num">Total</th></tr></thead><tbody>${rows || "<tr><td colspan='5'>No item details recorded</td></tr>"}</tbody></table>
+      <div class="totals"><div><span>Subtotal</span><b>${currency(invoice.subtotal)}</b></div><div><span>CGST</span><b>${currency(invoice.cgst)}</b></div><div><span>SGST</span><b>${currency(invoice.sgst)}</b></div><div><span>Total tax</span><b>${currency(invoice.totalTax)}</b></div><div class="grand"><span>Grand total</span><span>${currency(invoice.totalAmount)}</span></div></div>
+      <footer>Thank you for shopping with us. This invoice was generated by StoreDesk.</footer>
+      <script>window.addEventListener("load",()=>window.print())</script></body></html>`);
+    printWindow.document.close();
   };
 
-  const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString("en-IN", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  const selectedSale = sales.find(sale => sale.id === selectedSaleId);
 
   return (
     <DashboardLayout>
-      <div className="p-6 max-w-7xl mx-auto">
-        <div className="mb-6">
-          <h1 className="section-title">Sales Transactions</h1>
+      <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[.18em] text-emerald-700 dark:text-emerald-300">Store operations / Billing history</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight">Sales & invoices</h1>
+          <p className="mt-2 text-sm text-muted-foreground">Review completed transactions and print their linked tax invoices.</p>
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Card className="p-6">
-            <div className="text-sm text-muted-foreground mb-2">Total Sales</div>
-            <div className="text-3xl font-bold text-accent">{sales.length}</div>
-          </Card>
-          <Card className="p-6">
-            <div className="text-sm text-muted-foreground mb-2">Total Revenue</div>
-            <div className="text-3xl font-bold text-accent">
-              ₹{sales.reduce((sum: number, s: any) => sum + Number(s.totalAmount), 0).toFixed(2)}
-            </div>
-          </Card>
-          <Card className="p-6">
-            <div className="text-sm text-muted-foreground mb-2">Total Tax Collected</div>
-            <div className="text-3xl font-bold text-accent">
-              ₹{sales.reduce((sum: number, s: any) => sum + Number(s.taxAmount), 0).toFixed(2)}
-            </div>
-          </Card>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Card className="rounded-2xl p-5"><p className="text-xs text-muted-foreground">Transactions</p><p className="mt-2 text-2xl font-semibold tabular-nums">{sales.length}</p></Card>
+          <Card className="rounded-2xl p-5"><p className="text-xs text-muted-foreground">Gross revenue</p><p className="mt-2 text-2xl font-semibold tabular-nums">{currency(sales.reduce((sum, sale) => sum + Number(sale.totalAmount), 0))}</p></Card>
+          <Card className="rounded-2xl p-5"><p className="text-xs text-muted-foreground">Tax collected</p><p className="mt-2 text-2xl font-semibold tabular-nums">{currency(sales.reduce((sum, sale) => sum + Number(sale.taxAmount), 0))}</p></Card>
         </div>
 
-        {/* Sales Table */}
-        <Card className="p-6 overflow-x-auto">
-          <table className="invoice-table w-full">
-            <thead>
-              <tr>
-                <th>Invoice #</th>
-                <th>Date & Time</th>
-                <th>Payment Mode</th>
-                <th>Items</th>
-                <th>Subtotal</th>
-                <th>Tax</th>
-                <th>Discount</th>
-                <th>Total</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sales.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="text-center py-8 text-muted-foreground">
-                    No sales found
-                  </td>
-                </tr>
-              ) : (
-                sales.map((sale: any) => (
-                  <tr key={sale.id} className="table-row-hover">
-                    <td className="font-medium">{sale.invoiceNumber}</td>
-                    <td className="text-sm">{formatDate(sale.createdAt)}</td>
-                    <td>
-                      <span className="badge badge-primary">
-                        {sale.paymentMode.toUpperCase()}
-                      </span>
-                    </td>
-                    <td>{sale.itemCount || 0}</td>
-                    <td>₹{(Number(sale.totalAmount) - Number(sale.taxAmount)).toFixed(2)}</td>
-                    <td>₹{Number(sale.taxAmount).toFixed(2)}</td>
-                    <td>₹{Number(sale.discountAmount).toFixed(2)}</td>
-                    <td className="font-bold text-accent">₹{Number(sale.totalAmount).toFixed(2)}</td>
-                    <td>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => setSelectedSaleId(sale.id)}
-                          className="p-2 hover:bg-muted rounded transition-colors"
-                          title="View details"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDownloadInvoice(sale.invoiceNumber)}
-                          className="p-2 hover:bg-muted rounded transition-colors"
-                          title="Download invoice"
-                        >
-                          <Download className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+        <Card className="overflow-hidden rounded-2xl">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b p-5"><div><h2 className="font-semibold">Transaction history</h2><p className="mt-1 text-xs text-muted-foreground">Newest transactions appear first.</p></div><Button variant="outline" size="sm" onClick={()=>void salesQuery.refetch()}>Refresh</Button></div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[850px] text-sm">
+              <thead className="bg-muted/40 text-left text-xs text-muted-foreground"><tr><th className="px-5 py-3">INVOICE</th><th className="px-5 py-3">DATE</th><th className="px-5 py-3">PAYMENT</th><th className="px-5 py-3">SUBTOTAL</th><th className="px-5 py-3">TAX</th><th className="px-5 py-3">DISCOUNT</th><th className="px-5 py-3">TOTAL</th><th className="px-5 py-3">DETAILS</th></tr></thead>
+              <tbody>
+                {sales.map(sale=><tr key={sale.id} className="border-t">
+                  <td className="px-5 py-4 font-medium">{sale.invoiceNumber}</td>
+                  <td className="px-5 py-4 text-xs text-muted-foreground">{formatDate(sale.createdAt)}</td>
+                  <td className="px-5 py-4"><span className="rounded-full bg-muted px-2 py-1 text-[10px] font-semibold">{sale.paymentMode.toUpperCase()}</span></td>
+                  <td className="px-5 py-4 tabular-nums">{currency(sale.subtotal)}</td>
+                  <td className="px-5 py-4 tabular-nums">{currency(sale.taxAmount)}</td>
+                  <td className="px-5 py-4 tabular-nums">{currency(sale.discountAmount)}</td>
+                  <td className="px-5 py-4 font-semibold tabular-nums">{currency(sale.totalAmount)}</td>
+                  <td className="px-5 py-4"><Button size="sm" variant="outline" onClick={()=>setSelectedSaleId(sale.id)}><Eye className="mr-2 h-3.5 w-3.5"/>View invoice</Button></td>
+                </tr>)}
+                {sales.length===0 && <tr><td colSpan={8} className="p-12 text-center text-sm text-muted-foreground">{salesQuery.isLoading?"Loading transactions…":"No sales have been recorded yet."}</td></tr>}
+              </tbody>
+            </table>
+          </div>
         </Card>
 
-        {/* Sale Details Modal */}
-        {selectedSaleId && invoiceQuery.data && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-            <Card className="w-full max-w-2xl max-h-96 overflow-y-auto">
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-bold">Invoice Details</h2>
-                  <button
-                    onClick={() => setSelectedSaleId(null)}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <div className="text-sm text-muted-foreground">Invoice Number</div>
-                      <div className="font-semibold">{invoiceQuery.data.invoiceNumber}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground">Date</div>
-                      <div className="font-semibold">{formatDate(invoiceQuery.data.createdAt)}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground">Store Name</div>
-                      <div className="font-semibold">{invoiceQuery.data.storeName || "N/A"}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground">Invoice Date</div>
-                      <div className="font-semibold">{formatDate(invoiceQuery.data.invoiceDate)}</div>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-border pt-4">
-                    <h3 className="font-semibold mb-2">Items</h3>
-                    <div className="space-y-2 text-sm">
-                      {/* Items would be fetched separately */}
-                      <div className="text-muted-foreground">Items details loading...</div>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-border pt-4 space-y-2">
-                    <div className="flex justify-between">
-                      <span>Subtotal:</span>
-                      <span>₹{Number(invoiceQuery.data.subtotal).toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>CGST:</span>
-                      <span>₹{Number(invoiceQuery.data.cgst || 0).toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>SGST:</span>
-                      <span>₹{Number(invoiceQuery.data.sgst || 0).toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between font-bold text-lg border-t border-border pt-2">
-                      <span>Total:</span>
-                      <span className="text-accent">₹{(Number(invoiceQuery.data.subtotal) + Number(invoiceQuery.data.cgst || 0) + Number(invoiceQuery.data.sgst || 0)).toFixed(2)}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </div>
-        )}
+        {selectedSaleId !== null && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3 sm:p-6" onMouseDown={event=>{if(event.target===event.currentTarget)setSelectedSaleId(null);}}>
+          <Card className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl">
+            <div className="sticky top-0 flex items-center justify-between border-b bg-card p-5"><div><p className="text-xs text-muted-foreground">Invoice details</p><h2 className="mt-1 font-semibold">{invoiceQuery.data?.invoiceNumber || selectedSale?.invoiceNumber || "Loading invoice…"}</h2></div><Button size="icon" variant="ghost" onClick={()=>setSelectedSaleId(null)} aria-label="Close invoice details"><X className="h-4 w-4"/></Button></div>
+            {invoiceQuery.isLoading ? <div className="p-10 text-center text-sm text-muted-foreground">Loading invoice…</div> : invoiceQuery.data ? <div className="space-y-5 p-5">
+              <div className="grid gap-3 sm:grid-cols-2"><div><p className="text-xs text-muted-foreground">Store</p><p className="mt-1 font-medium">{invoiceQuery.data.storeName || "StoreDesk Retail"}</p><p className="text-xs text-muted-foreground">{invoiceQuery.data.storeAddress}</p></div><div><p className="text-xs text-muted-foreground">Invoice date</p><p className="mt-1 font-medium">{formatDate(invoiceQuery.data.invoiceDate)}</p><p className="text-xs text-muted-foreground">GSTIN: {invoiceQuery.data.gstin || "Not configured"}</p></div></div>
+              <div className="overflow-x-auto rounded-xl border"><table className="w-full min-w-[500px] text-sm"><thead className="bg-muted/40 text-left text-xs text-muted-foreground"><tr><th className="p-3">ITEM</th><th className="p-3 text-right">QTY</th><th className="p-3 text-right">PRICE</th><th className="p-3 text-right">GST</th><th className="p-3 text-right">TOTAL</th></tr></thead><tbody>{invoiceItems.map((item,index)=><tr key={index} className="border-t"><td className="p-3">{item.name || `Product #${item.productId}`}</td><td className="p-3 text-right">{item.quantity}</td><td className="p-3 text-right">{currency(item.unitPrice)}</td><td className="p-3 text-right">{Number(item.gstPercentage||0).toFixed(2)}%</td><td className="p-3 text-right font-medium">{currency(item.totalPrice)}</td></tr>)}</tbody></table></div>
+              <div className="ml-auto max-w-xs space-y-2 text-sm"><div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><b>{currency(invoiceQuery.data.subtotal)}</b></div><div className="flex justify-between"><span className="text-muted-foreground">CGST</span><b>{currency(invoiceQuery.data.cgst)}</b></div><div className="flex justify-between"><span className="text-muted-foreground">SGST</span><b>{currency(invoiceQuery.data.sgst)}</b></div><div className="flex justify-between border-t pt-3 text-base"><span className="font-semibold">Grand total</span><b>{currency(invoiceQuery.data.totalAmount)}</b></div></div>
+              <div className="flex justify-end"><Button onClick={printInvoice}><Printer className="mr-2 h-4 w-4"/>Print / Save PDF</Button></div>
+            </div> : <div className="p-10 text-center text-sm text-muted-foreground">Invoice could not be found for this sale.</div>}
+          </Card>
+        </div>}
       </div>
     </DashboardLayout>
   );
