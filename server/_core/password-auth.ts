@@ -41,7 +41,7 @@ async function hashPassword(password: string) {
     p: SCRYPT_P,
     maxmem: 64 * 1024 * 1024,
   });
-  return \`scrypt$\${SCRYPT_N}$\${SCRYPT_R}$\${SCRYPT_P}$\${salt.toString("hex")}$\${derived.toString("hex")}\`;
+  return `scrypt$${SCRYPT_N}$${SCRYPT_R}$${SCRYPT_P}$${salt.toString("hex")}$${derived.toString("hex")}`;
 }
 
 async function verifyPassword(password: string, encoded: string) {
