@@ -64,15 +64,16 @@ export function useAuth(options?: UseAuthOptions) {
     if (meQuery.isLoading || logoutMutation.isPending) return;
     if (state.user) return;
     if (typeof window === "undefined") return;
-    if (window.location.pathname === redirectPath) return;
+    if (redirectPath && window.location.pathname === redirectPath) return;
 
-    if (redirectPath) {\n      if (redirectPath) {
+    if (redirectPath) {
       window.location.href = redirectPath;
       return;
     }
+
     if (isOAuthConfigured()) {
       window.location.href = getLoginUrl();
-    };\n      return;\n    }\n    if (isOAuthConfigured()) {\n      window.location.href = getLoginUrl();\n    }
+    }
   }, [
     redirectOnUnauthenticated,
     redirectPath,
