@@ -4,6 +4,7 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { appRouter } from "./server/routers";
 import { createContext } from "./server/_core/context";
 import { registerOAuthRoutes } from "./server/_core/oauth";
+import { registerPasswordAuthRoutes } from "./server/_core/password-auth";
 
 // Vercel detects this root Express entrypoint and runs it as a serverless function.
 // Keep API routes here; Vite's production assets are emitted to /public for the CDN.
@@ -14,6 +15,7 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 registerOAuthRoutes(app);
+registerPasswordAuthRoutes(app);
 
 app.use(
   "/api/trpc",
