@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 680" role="img" aria-labelledby="t d">
+<title id="t">StoreDesk dashboard interface guide</title><desc id="d">Illustrative StoreDesk dashboard showing sidebar navigation, metric cards, sales performance chart and operational alerts.</desc>
+<rect width="1200" height="680" rx="25" fill="#f2f5f1" stroke="#dfe7df"/>
+<rect x="0" y="0" width="1200" height="60" rx="25" fill="#fff"/><path d="M0 60H1200" stroke="#e0e8e0"/>
+<rect x="25" y="16" width="28" height="28" rx="8" fill="#1f5c43"/><path d="M39 22v16M32 30h14" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+<text x="65" y="36" font-family="Arial,sans-serif" font-size="17" font-weight="700" fill="#24352a">StoreDesk</text>
+<rect x="944" y="14" width="116" height="32" rx="8" fill="#edf4ed"/><text x="1002" y="34" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#47614e">Today ▾</text><circle cx="1101" cy="30" r="16" fill="#e0eee1"/><text x="1101" y="34" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#286344">AD</text>
+<rect x="0" y="61" width="205" height="619" fill="#fff"/><path d="M205 61V680" stroke="#e0e8e0"/>
+<text x="25" y="100" font-family="Arial,sans-serif" font-size="10" font-weight="700" letter-spacing="1.5" fill="#9ba89d">WORKSPACE</text>
+<g font-family="Arial,sans-serif" font-size="12" fill="#637267">
+<rect x="14" y="117" width="177" height="38" rx="9" fill="#eaf4ec"/><text x="49" y="141" fill="#24593d" font-weight="700">Dashboard</text>
+<text x="49" y="187">Point of Sale</text><text x="49" y="229">Products</text><text x="49" y="271">Inventory</text><text x="49" y="313">Sales</text><text x="49" y="355">Analytics</text><text x="49" y="397">Reports</text>
+</g>
+<g fill="none" stroke="#829787" stroke-width="1.6"><rect x="27" y="130" width="12" height="12" rx="3"/><path d="M27 177h13m-13 4h13m-13 4h8M27 219h13m-13 4h13M27 261h13m-13 4h13M27 303h13m-13 4h13M27 345h13m-13 4h13M27 387h13m-13 4h13"/></g>
+<text x="242" y="111" font-family="Arial,sans-serif" font-size="11" font-weight="700" letter-spacing="1.6" fill="#2e8055">STORE OVERVIEW</text>
+<text x="242" y="153" font-family="Arial,sans-serif" font-size="30" font-weight="700" fill="#23372a">Good morning, Adarsh.</text>
+<text x="242" y="181" font-family="Arial,sans-serif" font-size="13" fill="#7b897e">Here's what's happening across your store today.</text>
+<g font-family="Arial,sans-serif">
+<g transform="translate(242 215)"><rect width="215" height="108" rx="14" fill="#fff" stroke="#e2e9e2"/><text x="18" y="29" font-size="11" fill="#829087">GROSS SALES</text><text x="18" y="70" font-size="25" font-weight="700" fill="#23372a">₹48,650</text><text x="18" y="91" font-size="10" fill="#3b9668">Period total</text></g>
+<g transform="translate(473 215)"><rect width="215" height="108" rx="14" fill="#fff" stroke="#e2e9e2"/><text x="18" y="29" font-size="11" fill="#829087">TRANSACTIONS</text><text x="18" y="70" font-size="25" font-weight="700" fill="#23372a">126</text><text x="18" y="91" font-size="10" fill="#829087">Completed bills</text></g>
+<g transform="translate(704 215)"><rect width="215" height="108" rx="14" fill="#fff" stroke="#e2e9e2"/><text x="18" y="29" font-size="11" fill="#829087">ACTIVE PRODUCTS</text><text x="18" y="70" font-size="25" font-weight="700" fill="#23372a">248</text><text x="18" y="91" font-size="10" fill="#829087">Catalogue items</text></g>
+<g transform="translate(935 215)"><rect width="215" height="108" rx="14" fill="#fff" stroke="#e2e9e2"/><text x="18" y="29" font-size="11" fill="#829087">LOW STOCK</text><text x="18" y="70" font-size="25" font-weight="700" fill="#b27d2e">08</text><text x="18" y="91" font-size="10" fill="#829087">Review required</text></g>
+</g>
+<rect x="242" y="343" width="565" height="292" rx="15" fill="#fff" stroke="#e2e9e2"/>
+<text x="266" y="377" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#263a2c">Sales performance</text><text x="266" y="398" font-family="Arial,sans-serif" font-size="10" fill="#8a978c">Revenue trend · illustrative preview</text>
+<path d="M276 588H779M276 540H779M276 492H779M276 444H779" stroke="#edf1ec" stroke-dasharray="4 5"/>
+<path d="M276 560 C330 540 350 520 398 528 S470 490 520 501 S590 460 640 473 S713 428 779 443 L779 588 L276 588Z" fill="#dcefe1"/>
+<path d="M276 560 C330 540 350 520 398 528 S470 490 520 501 S590 460 640 473 S713 428 779 443" stroke="#2e8055" stroke-width="3" fill="none"/>
+<rect x="826" y="343" width="324" height="292" rx="15" fill="#fff" stroke="#e2e9e2"/>
+<text x="850" y="377" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#263a2c">Quick actions</text>
+<g font-family="Arial,sans-serif" font-size="12" font-weight="600">
+<rect x="850" y="399" width="276" height="48" rx="10" fill="#eaf4ec"/><text x="870" y="428" fill="#286344">Start a new bill  →</text>
+<rect x="850" y="461" width="276" height="48" rx="10" fill="#f4f7f3"/><text x="870" y="490" fill="#34473a">Add a product</text>
+<rect x="850" y="523" width="276" height="48" rx="10" fill="#f4f7f3"/><text x="870" y="552" fill="#34473a">Review stock levels</text>
+</g>
+<text x="242" y="661" font-family="Arial,sans-serif" font-size="10" fill="#98a49a">Illustrative user-guide image · dashboard figures are not live store data</text>
+</svg>
