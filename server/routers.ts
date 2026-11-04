@@ -38,10 +38,8 @@ const productSchema = z.object({
 });
 
 const saleItemSchema = z.object({
-  productId: z.number(),
-  quantity: z.number().positive(),
-  unitPrice: z.number().positive(),
-  gstPercentage: z.number().min(0).max(100),
+  productId: z.number().int().positive(),
+  quantity: z.number().int().positive(),
 });
 
 const createSaleSchema = z.object({
@@ -66,11 +64,11 @@ export const appRouter = router({
 
   // ============ PRODUCT MANAGEMENT ============
   products: router({
-    list: publicProcedure.query(async () => {
+    list: protectedProcedure.query(async () => {
       return db.getAllProducts();
     }),
 
-    search: publicProcedure
+    search: protectedProcedure
       .input(z.object({ query: z.string() }))
       .query(async ({ input }) => {
         if (!input.query.trim()) {
@@ -79,7 +77,7 @@ export const appRouter = router({
         return db.searchProducts(input.query);
       }),
 
-    getById: publicProcedure
+    getById: protectedProcedure
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
         const product = await db.getProductById(input.id);
@@ -92,7 +90,7 @@ export const appRouter = router({
         return product;
       }),
 
-    getByBarcode: publicProcedure
+    getByBarcode: protectedProcedure
       .input(z.object({ barcode: z.string() }))
       .query(async ({ input }) => {
         const product = await db.getProductByBarcode(input.barcode);
@@ -256,129 +254,33 @@ export const appRouter = router({
     create: protectedProcedure
       .input(createSaleSchema)
       .mutation(async ({ input, ctx }) => {
-      if (ctx.user?.role !== "cashier" && ctx.user?.role !== "admin") {
-        throw new TRPCError({
-          code: "FORBIDDEN" as any,
-          message: "Only cashiers and admins can create sales",
-        });
-        }
-
-        const invoiceNumber = generateInvoiceNumber();
-        let subtotal = 0;
-        let totalTax = 0;
-        const saleItems = [];
-
-        // Process each item
-        for (const item of input.items) {
-          const product = await db.getProductById(item.productId);
-          if (!product) {
-            throw new TRPCError({
-              code: "NOT_FOUND" as any,
-              message: `Product ${item.productId} not found`,
-            });
-          }
-
-          if (product.stockQuantity < item.quantity) {
-            throw new TRPCError({
-              code: "BAD_REQUEST" as any,
-              message: `Insufficient stock for ${product.name}`,
-            });
-          }
-
-          const itemSubtotal = item.quantity * item.unitPrice;
-          const gstAmount = (itemSubtotal * item.gstPercentage) / 100;
-          const itemTotal = itemSubtotal + gstAmount;
-
-          subtotal += itemSubtotal;
-          totalTax += gstAmount;
-
-          saleItems.push({
-            productId: item.productId,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice.toString(),
-            gstPercentage: item.gstPercentage.toString(),
-            gstAmount: gstAmount.toString(),
-            totalPrice: itemTotal.toString(),
-          });
-
-          // Update stock
-          await db.updateProduct(item.productId, {
-            stockQuantity: product.stockQuantity - item.quantity,
-          } as any);
-
-          // Record stock history
-          await db.createStockHistory({
-            productId: item.productId,
-            previousQuantity: product.stockQuantity,
-            newQuantity: product.stockQuantity - item.quantity,
-            changeReason: "sale" as any,
-            quantity: -item.quantity,
+        if (ctx.user?.role !== "cashier" && ctx.user?.role !== "admin") {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Only cashiers and admins can create sales",
           });
         }
 
-        const totalAmount = subtotal + totalTax - input.discountAmount;
-        const cgst = totalTax / 2;
-        const sgst = totalTax / 2;
-
-        // Create sale record
-        await db.createSale({
-          invoiceNumber,
-          cashierId: ctx.user!.id,
-          totalAmount: totalAmount.toString() as any,
-          subtotal: subtotal.toString() as any,
-          discountAmount: input.discountAmount.toString() as any,
-          taxAmount: totalTax.toString() as any,
-          cgst: cgst.toString() as any,
-          sgst: sgst.toString() as any,
-          paymentMode: input.paymentMode,
-          status: "completed",
-          notes: input.notes,
-        });
-
-        // Create sale items
-        for (const item of saleItems) {
-          await db.createSaleItem({
-            productId: item.productId,
-            saleId: 0, // Will be set by database
-            quantity: item.quantity,
-            unitPrice: item.unitPrice.toString() as any,
-            gstPercentage: item.gstPercentage.toString() as any,
-            gstAmount: item.gstAmount.toString() as any,
-            totalPrice: item.totalPrice.toString() as any,
+        try {
+          return await db.createSaleTransaction({
+            cashierId: ctx.user.id,
+            invoiceNumber: generateInvoiceNumber(),
+            items: input.items,
+            discountAmount: input.discountAmount,
+            paymentMode: input.paymentMode,
+            notes: input.notes,
           });
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "Unable to complete the sale";
+          throw new TRPCError({ code: "BAD_REQUEST", message });
         }
-
-        // Create invoice
-        const settings = await db.getSystemSettings();
-        await db.createInvoice({
-          saleId: 0,
-          invoiceNumber,
-          gstin: settings?.gstin,
-          storeName: settings?.storeName,
-          storeAddress: settings?.storeAddress,
-          invoiceDate: new Date(),
-          items: JSON.stringify(saleItems),
-          subtotal: subtotal.toString() as any,
-          cgst: cgst.toString() as any,
-          sgst: sgst.toString() as any,
-          totalTax: totalTax.toString() as any,
-          totalAmount: totalAmount.toString() as any,
-        });
-
-        return {
-          success: true,
-          saleId: 0,
-          invoiceId: 0,
-          invoiceNumber,
-          totalAmount: Number(totalAmount.toFixed(2)),
-        };
       }),
 
-    list: publicProcedure.query(async () => {
+    list: protectedProcedure.query(async () => {
       return db.getAllSales();
     }),
 
-    getById: publicProcedure
+    getById: protectedProcedure
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
         const sale = await db.getSaleById(input.id);
@@ -392,7 +294,7 @@ export const appRouter = router({
         return { ...sale, items };
       }),
 
-    getByDateRange: publicProcedure
+    getByDateRange: protectedProcedure
       .input(z.object({
         startDate: z.date(),
         endDate: z.date(),
@@ -404,7 +306,7 @@ export const appRouter = router({
 
   // ============ INVOICES ============
   invoices: router({
-    getById: publicProcedure
+    getById: protectedProcedure
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
         const invoice = await db.getInvoiceById(input.id);
@@ -417,7 +319,7 @@ export const appRouter = router({
         return invoice;
       }),
 
-    getByNumber: publicProcedure
+    getByNumber: protectedProcedure
       .input(z.object({ invoiceNumber: z.string() }))
       .query(async ({ input }) => {
         const invoice = await db.getInvoiceByNumber(input.invoiceNumber);
@@ -426,6 +328,16 @@ export const appRouter = router({
             code: "NOT_FOUND" as any,
             message: "Invoice not found",
           });
+        }
+        return invoice;
+      }),
+
+    getBySaleId: protectedProcedure
+      .input(z.object({ saleId: z.number().int().positive() }))
+      .query(async ({ input }) => {
+        const invoice = await db.getInvoiceBySaleId(input.saleId);
+        if (!invoice) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Invoice not found" });
         }
         return invoice;
       }),
@@ -440,7 +352,7 @@ export const appRouter = router({
 
   // ============ SYSTEM SETTINGS ============
   settings: router({
-    get: publicProcedure.query(async () => {
+    get: protectedProcedure.query(async () => {
       return db.getSystemSettings();
     }),
 
@@ -479,6 +391,22 @@ export const appRouter = router({
       }
       return db.getAllUsers();
     }),
+
+    updateRole: protectedProcedure
+      .input(z.object({
+        userId: z.number().int().positive(),
+        role: z.enum(["admin", "cashier", "user"]),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user?.role !== "admin") {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can change user roles" });
+        }
+        if (input.userId === ctx.user.id && input.role !== "admin") {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "You cannot remove your own admin role" });
+        }
+        await db.updateUserRole(input.userId, input.role);
+        return { success: true };
+      }),
   }),
 
   // ============ ANALYTICS ============
