@@ -20,28 +20,29 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { getLoginUrl, isOAuthConfigured } from "@/const";
+
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, Moon, Sun } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, ShoppingCart, Package, Warehouse, ReceiptText, ChartNoAxesCombined, FileBarChart, BookOpen, ShieldCheck, Settings, Moon, Sun } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-  { icon: LayoutDashboard, label: "POS", path: "/pos" },
-  { icon: Users, label: "Products", path: "/products" },
-  { icon: Users, label: "Inventory", path: "/inventory" },
-  { icon: Users, label: "Sales", path: "/sales" },
-  { icon: Users, label: "Analytics", path: "/analytics" },
-  { icon: Users, label: "Reports", path: "/reports" },
+  { icon: LayoutDashboard, label: "Overview", path: "/dashboard" },
+  { icon: ShoppingCart, label: "Point of Sale", path: "/pos" },
+  { icon: Package, label: "Products", path: "/products" },
+  { icon: Warehouse, label: "Inventory", path: "/inventory" },
+  { icon: ReceiptText, label: "Sales & invoices", path: "/sales" },
+  { icon: ChartNoAxesCombined, label: "Analytics", path: "/analytics" },
+  { icon: FileBarChart, label: "Reports", path: "/reports" },
+  { icon: BookOpen, label: "User guide", path: "/guide" },
 ];
 
 const adminMenuItems = [
-  { icon: Users, label: "Admin Panel", path: "/admin" },
-  { icon: Users, label: "Users", path: "/admin/users" },
-  { icon: Users, label: "Settings", path: "/admin/settings" },
+  { icon: ShieldCheck, label: "Administration", path: "/admin" },
+  { icon: Users, label: "Team & permissions", path: "/admin/users" },
+  { icon: Settings, label: "Store settings", path: "/admin/settings" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
@@ -71,28 +72,14 @@ export default function DashboardLayout({
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center gap-8 p-8 max-w-md w-full">
-          <div className="flex flex-col items-center gap-6">
-            <h1 className="text-2xl font-semibold tracking-tight text-center">
-              Sign in to continue
-            </h1>
-            <p className="text-sm text-muted-foreground text-center max-w-sm">
-              {isOAuthConfigured()
-                ? "Access to this dashboard requires authentication. Continue to launch the login flow."
-                : "Sign-in has not been configured for this deployment yet. Please contact the store administrator."}
-            </p>
-          </div>
-          <Button
-            disabled={!isOAuthConfigured()}
-            onClick={() => {
-              window.location.href = getLoginUrl();
-            }}
-            size="lg"
-            className="w-full shadow-lg hover:shadow-xl transition-all"
-          >
-            {isOAuthConfigured() ? "Sign in" : "Sign-in setup pending"}
+      <div className="flex min-h-screen items-center justify-center bg-background p-6">
+        <div className="max-w-md text-center">
+          <h1 className="text-2xl font-semibold tracking-tight">Sign in to StoreDesk</h1>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">Your store workspace requires an authenticated account. Sign in to continue to this module.</p>
+          <Button asChild className="mt-6 w-full bg-[#1f5c43] text-white hover:bg-[#174934]">
+            <a href="/login">Go to sign in</a>
           </Button>
+          <a href="/" className="mt-4 inline-block text-xs text-muted-foreground hover:underline">Back to StoreDesk home</a>
         </div>
       </div>
     );
@@ -188,7 +175,7 @@ function DashboardLayoutContent({
               {!isCollapsed ? (
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="font-semibold tracking-tight truncate">
-                    Navigation
+                    StoreDesk
                   </span>
                 </div>
               ) : null}
