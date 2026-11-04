@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { getLoginUrl } from "@/const";
+import { getLoginUrl, isOAuthConfigured } from "@/const";
 import DashboardLayout from "@/components/DashboardLayout";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -105,7 +105,14 @@ export default function Home() {
         <p className="text-xs font-semibold uppercase tracking-[.22em] text-primary">Retail operations</p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight">StoreDesk POS</h1>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">A smarter workspace for checkout, inventory, billing and store performance.</p>
-        <Button onClick={() => window.location.href = getLoginUrl()} className="mt-7 h-11 w-full rounded-xl">Sign in to your store</Button>
+        <Button disabled={!isOAuthConfigured()} onClick={() => window.location.href = getLoginUrl()} className="mt-7 h-11 w-full rounded-xl">
+          {isOAuthConfigured() ? "Sign in to your store" : "Sign-in setup pending"}
+        </Button>
+        {!isOAuthConfigured() && (
+          <p className="mt-3 text-xs leading-5 text-muted-foreground">
+            Sign-in has not been configured for this deployment yet. Please contact the store administrator.
+          </p>
+        )}
       </Card>
     </div>;
   }

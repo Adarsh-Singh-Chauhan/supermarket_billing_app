@@ -203,7 +203,7 @@ Create a local `.env` file in the repository root. The server reads these values
 | `DATABASE_URL` | MySQL connection URL |
 | `JWT_SECRET` | Session cookie signing secret |
 | `OAUTH_SERVER_URL` | Manus OAuth server base URL |
-| `VITE_APP_ID` | Application identifier used by the runtime |
+| `VITE_APP_ID` | Manus WebDev application identifier used by the login redirect and OAuth code exchange |\n| `VITE_OAUTH_PORTAL_URL` | Base URL for the Manus sign-in portal |
 | `OWNER_OPEN_ID` | Owner identity used for initial Admin role assignment |
 | `BUILT_IN_FORGE_API_URL` | Built-in service endpoint used by runtime integrations |
 | `BUILT_IN_FORGE_API_KEY` | Secret key for the built-in service integration |

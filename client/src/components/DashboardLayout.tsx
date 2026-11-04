@@ -20,7 +20,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { getLoginUrl } from "@/const";
+import { getLoginUrl, isOAuthConfigured } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
 import { LayoutDashboard, LogOut, PanelLeft, Users, Moon, Sun } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
@@ -78,17 +78,20 @@ export default function DashboardLayout({
               Sign in to continue
             </h1>
             <p className="text-sm text-muted-foreground text-center max-w-sm">
-              Access to this dashboard requires authentication. Continue to launch the login flow.
+              {isOAuthConfigured()
+                ? "Access to this dashboard requires authentication. Continue to launch the login flow."
+                : "Sign-in has not been configured for this deployment yet. Please contact the store administrator."}
             </p>
           </div>
           <Button
+            disabled={!isOAuthConfigured()}
             onClick={() => {
               window.location.href = getLoginUrl();
             }}
             size="lg"
             className="w-full shadow-lg hover:shadow-xl transition-all"
           >
-            Sign in
+            {isOAuthConfigured() ? "Sign in" : "Sign-in setup pending"}
           </Button>
         </div>
       </div>
